@@ -2,8 +2,8 @@
 
 module.exports = {
   type: 'BouncingBallGame',
-  deps: ['DefinePlugin'],
-  func: function(define) {
+  deps: ['DefinePlugin', 'BouncingBallGame-Behaviour'],
+  func: function(define, behaviour) {
     return function() {
       define()('StateSeed', function () {
         return {
@@ -52,6 +52,12 @@ module.exports = {
               }
             }
           };
+        };
+      });
+
+      define()('ActionMap', function () {
+        return {
+          'button1': [{target: behaviour().changeColour}]
         };
       });
     };

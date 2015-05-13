@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "ensemblejs": "^1.0.0",
-    "ensemblejs-client": "^1.0.0",
+    "ensemblejs-client": "^1.0.2",
     "ensemblejs-threejs": "^0.71.0",
     "zepto-browserify": "^1.1.6-1"
   },

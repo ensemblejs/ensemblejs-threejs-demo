@@ -43,8 +43,22 @@ module.exports = {
       }
     };
 
+    var updateColour = function (currentColour, priorColour, ball) {
+      if (currentColour === undefined) {
+        ball.material.color.setHex(priorColour);
+      } else {
+        ball.material.color.setHex(currentColour);
+      }
+
+      mesh.material.needsUpdate = true;
+    };
+
     var theBallPosition = function (state) {
       return state['bouncing-ball-game'].ball.position;
+    };
+
+    var theBallColour = function (state) {
+      return state['bouncing-ball-game'].ball.colour;
     };
 
     var mesh;
@@ -71,6 +85,7 @@ module.exports = {
       scene.add(ball);
 
       tracker().onChangeOf(theBallPosition, updateBall, ball);
+      tracker().onChangeOf(theBallColour, updateColour, ball);
 
       define()('OnEachFrame', function () {
         return function () {
