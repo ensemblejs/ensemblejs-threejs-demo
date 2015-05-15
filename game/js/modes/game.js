@@ -57,7 +57,7 @@ module.exports = {
 
       define()('ActionMap', function () {
         return {
-          'button1': [{target: behaviour().changeColour}]
+          'button1': [{target: behaviour().changeColour, onRelease: true}]
         };
       });
     };

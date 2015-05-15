@@ -8384,10 +8384,11 @@ function toArray(list, index) {
 },{}],61:[function(require,module,exports){
 'use strict';
 
+//jshint maxparams: 6
 module.exports = {
   type: 'ClientSideAssembler',
-  deps: ['SocketBehaviour', 'Dimensions', 'Window', 'UpdateLoop', 'OnResize'],
-  func: function (socketBehaviour, dimensions, window, updateLoop, resizeCallbacks) {
+  deps: ['SocketBehaviour', 'Dimensions', 'Window', 'UpdateLoop', 'OnResize', 'OnInitialise'],
+  func: function (socketBehaviour, dimensions, window, updateLoop, resizeCallbacks, onInitialiseCallbacks) {
 
     var each = require('lodash').each;
     var $ = require('zepto-browserify').$;
@@ -8402,8 +8403,11 @@ module.exports = {
 
     return {
       assembleAndRun: function () {
-        var socket = socketBehaviour().SocketBehaviour();
-        socket.connect();
+        each(onInitialiseCallbacks(), function (callback) {
+          callback();
+        });
+
+        socketBehaviour().connect();
 
         $(window()).on('load resize', resizeCanvas);
         updateLoop().run();
@@ -8414,7 +8418,7 @@ module.exports = {
 },{"lodash":85,"zepto-browserify":86}],62:[function(require,module,exports){
 'use strict';
 
-var plugins = require('plug-n-play').configure(['View', 'InputMode', 'OnMute', 'OnPause', 'OnResume', 'OnUnmute', 'OnConnect', 'OnDisconnect', 'OnEachFrame', 'OnResize', 'OnPacket', 'OnSetup', 'OnError', 'OnSystemSetup']);
+var plugins = require('plug-n-play').configure(['View', 'InputMode', 'OnMute', 'OnPause', 'OnResume', 'OnUnmute', 'OnConnect', 'OnDisconnect', 'OnEachFrame', 'OnResize', 'OnPacket', 'OnSetup', 'OnError', 'OnInitialise']);
 
 module.exports = {
   load: plugins.load,
@@ -8552,7 +8556,6 @@ module.exports = {
       $('#' + element()).css('width', dims.usableWidth);
       $('#' + element()).css('height', dims.usableHeight);
 
-      $('#' + inputElement()).css('margin-top', dims.marginTopBottom);
       $('#' + inputElement()).css('width', dims.usableWidth);
       $('#' + inputElement()).css('height', dims.usableHeight);
     };
@@ -8641,6 +8644,11 @@ module.exports = {
         };
 
         var bindToWindowEvents = function () {
+          $(window()).on('click', function (e) {
+            singlePress(mouseMap()[e.which]);
+            // e.preventDefault();
+          });
+
           $(window()).on('mousedown', function (e) {
             press(mouseMap()[e.which]);
             e.preventDefault();
@@ -8754,98 +8762,84 @@ var each = require('lodash').each;
 var extend = require('lodash').extend;
 var $ = require('zepto-browserify').$;
 
-//jshint maxparams: 11
+//jshint maxparams: 10
 module.exports = {
-  deps: ['Window', 'InputMode', 'GameMode', 'ServerUrl', 'OnConnect', 'OnDisconnect', 'PendingAcknowledgements', 'OnPacket', 'OnSetup', 'OnError', 'OnSystemSetup'],
+  deps: ['Window', 'InputMode', 'GameMode', 'ServerUrl', 'OnConnect', 'OnDisconnect', 'PendingAcknowledgements', 'OnPacket', 'OnSetup', 'OnError'],
   type: 'SocketBehaviour',
-  func: function (window, inputModes, gameMode, serverUrl, onConnectCallbacks, onDisconnectCallbacks, pendingAcknowledgements, onPacketCallbacks, onSetupCallbacks, onErrorCallbacks, onSystemSetupCallbacks) {
+  func: function (window, inputModes, gameMode, serverUrl, onConnectCallbacks, onDisconnectCallbacks, pendingAcknowledgements, onPacketCallbacks, onSetupCallbacks, onErrorCallbacks) {
+
+    var controls = [];
+
+    var configureEmitFunction = function (socket) {
+      return function () {
+        var packet = {
+          pendingAcks: pendingAcknowledgements().flush(),
+          sentTimestamp: Date.now()
+        };
+
+        each(controls, function (control) {
+          extend(packet, control.getCurrentState());
+        });
+
+        socket.emit('input', packet);
+      };
+    };
+
+    var url = function () {
+      return serverUrl() + gameMode() + '/primary';
+    };
+
     return {
-      SocketBehaviour: function () {
-        var controls = [];
+      connect: function () {
+        var io = require('socket.io-client');
+        var socket = io.connect(url(), {reconnection: false});
 
-        var configureEmitFunction = function (socket) {
-          return function () {
-            var packet = {
-              pendingAcks: pendingAcknowledgements().flush(),
-              sentTimestamp: Date.now()
-            };
+        if (window().document.hasFocus()) {
+          socket.emit('unpause');
+        }
 
-            each(controls, function (control) {
-              extend(packet, control.getCurrentState());
-            });
+        socket.on('connect', function () {
+          each(onConnectCallbacks(), function (callback) {
+            callback();
+          });
+        });
+        socket.on('disconnect', function () {
+          each(onDisconnectCallbacks(), function (callback) {
+            callback();
+          });
+        });
+        socket.on('playerId', function (playerId) {
+          socket.playerId = playerId;
+        });
+        socket.on('initialState', function (state) {
+          each(onSetupCallbacks(), function (callback) {
+            callback(state);
+          });
+        });
+        socket.on('updateState', function (state) {
+          each(onPacketCallbacks(), function (callback) {
+            callback(state);
+          });
+        });
+        socket.on('error', function (data) {
+          each(onErrorCallbacks(), function (callback) {
+            callback(data);
+          });
+        });
 
-            socket.emit('input', packet);
-          };
-        };
+        $(window()).on('blur', function () { socket.emit('pause'); });
+        $(window()).on('focus', function () { socket.emit('unpause'); });
+        $(window()).on('mousedown', function () { socket.emit('unpause'); });
+        $(window()).on('mouseup', function () { socket.emit('unpause'); });
 
-        var url = function () {
-          return serverUrl() + gameMode() + '/primary';
-        };
+        each(inputModes(), function (inputMode) {
+          controls.push(inputMode.InputMode());
+        });
 
-        return {
-            connect: function () {
-              var io = require('socket.io-client');
-              var socket = io.connect(url(), {reconnection: false});
-
-              if (window().document.hasFocus()) {
-                socket.emit('unpause');
-              }
-
-              each(onSystemSetupCallbacks(), function (callback) {
-                callback();
-              });
-
-              socket.on('connect', function () {
-                console.log('connect');
-                each(onConnectCallbacks(), function (callback) {
-                  callback();
-                });
-              });
-              // var unfurl = require('unfurler');
-              // socket.on('connect', unfurl.array(onConnectCallbacks));
-              socket.on('disconnect', function () {
-                console.log('disconnect');
-                each(onDisconnectCallbacks(), function (callback) {
-                  callback();
-                });
-              });
-              socket.on('playerId', function (playerId) {
-                socket.playerId = playerId;
-              });
-              socket.on('initialState', function (state) {
-                console.log('initialState');
-                each(onSetupCallbacks(), function (callback) {
-                  callback(state);
-                });
-              });
-              socket.on('updateState', function (state) {
-                console.log('updateState');
-                each(onPacketCallbacks(), function (callback) {
-                  callback(state);
-                });
-              });
-              socket.on('error', function (data) {
-                console.log('error');
-                each(onErrorCallbacks(), function (callback) {
-                  callback(data);
-                });
-              });
-
-              $(window()).on('blur', function () { socket.emit('pause'); });
-              $(window()).on('focus', function () { socket.emit('unpause'); });
-              $(window()).on('mousedown', function () { socket.emit('unpause'); });
-              $(window()).on('mouseup', function () { socket.emit('unpause'); });
-
-              each(inputModes(), function (inputMode) {
-                controls.push(inputMode.InputMode());
-              });
-
-              var id = setInterval(configureEmitFunction (socket), 1000 / 120);
-              socket.on('disconnect', function () {
-                clearInterval(id);
-              });
-            }
-        };
+        var id = setInterval(configureEmitFunction (socket), 1000 / 120);
+        socket.on('disconnect', function () {
+          clearInterval(id);
+        });
       }
     };
   }
@@ -9144,7 +9138,7 @@ var reject = require('lodash').reject;
 
 module.exports = {
   deps: ['DefinePlugin'],
-  type: 'OnSystemSetup',
+  type: 'OnInitialise',
   func: function (define) {
     var effects = [];
 
