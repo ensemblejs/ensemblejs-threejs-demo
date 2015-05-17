@@ -16,7 +16,8 @@ module.exports = {
               speed: {
                 x: 100,
                 y: 50
-              }
+              },
+              colour: 0xffffff
             }
           }
         };
