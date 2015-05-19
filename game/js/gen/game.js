@@ -67,8 +67,13 @@ module.exports = {
     };
 
     var updateColour = function (current, prior, ball) {
-      ball.material.color.setHex(current);
-      mesh.material.needsUpdate = true;
+      if (current === 'happy') {
+        ball.material.color.setHex(0xffffff);
+      } else {
+        ball.material.color.setHex(0xff0000);
+      }
+
+      ball.material.needsUpdate = true;
     };
 
     var theBallPosition = function (state) {
@@ -79,15 +84,30 @@ module.exports = {
       return state['bouncing-ball-game'].ball.demeanour;
     };
 
-    var mesh;
-    var material;
-    var geometry;
-    var createCircle = function () {
-      material = new THREE.MeshBasicMaterial();
+    var theBallRadius = function (state) {
+      return state['bouncing-ball-game'].ball.radius;
+    };
 
-      geometry = new THREE.CircleGeometry(50, 100);
-      mesh = new THREE.Mesh(geometry, material);
+    var theBoardDimensions = function (state) {
+      return state['bouncing-ball-game'].board;
+    };
+
+    var createCircle = function () {
+      var material = new THREE.MeshBasicMaterial();
+
+      var geometry = new THREE.CircleGeometry(tracker().get(theBallRadius), 100);
+      var mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(0,0,-100);
+
+      return mesh;
+    };
+    var createBoard = function () {
+      var material = new THREE.MeshBasicMaterial();
+      material.color.setHex(0x55ff55);
+
+      var geometry = new THREE.PlaneBufferGeometry(tracker().get(theBoardDimensions).width, tracker().get(theBoardDimensions).height);
+      var mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(0,0,-101);
 
       return mesh;
     };
@@ -100,6 +120,8 @@ module.exports = {
       $('#' + element()).append(renderer.domElement);
 
       var ball = createCircle();
+      var board = createBoard();
+      scene.add(board);
       scene.add(ball);
 
       tracker().onChangeOf(theBallPosition, updateBall, ball);
