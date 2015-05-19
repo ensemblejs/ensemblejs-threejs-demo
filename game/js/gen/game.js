@@ -18,13 +18,13 @@ module.exports = {
   func: function (state) {
     return {
       changeColour: function () {
-        var current = state().get('bouncing-ball-game')('ball')('colour');
-        var newColour = (current === 0xffffff ? 0xff0000 : 0xffffff);
+        var current = state().get('bouncing-ball-game')('ball')('demeanour');
+        var newDemeanour = (current === 'happy' ? 'angry' : 'happy');
 
         return {
           'bouncing-ball-game': {
             ball: {
-              colour: newColour
+              demeanour: newDemeanour
             }
           }
         };
@@ -40,8 +40,8 @@ var THREE = require('ensemblejs-threejs');
 
 module.exports = {
   type: 'View',
-  deps: ['Element', 'Dimensions', 'StateTracker', 'DefinePlugin'],
-  func: function (element, dimensions, tracker, define) {
+  deps: ['Element', 'StateTracker', 'DefinePlugin'],
+  func: function (element, tracker, define) {
     var camera;
     var renderer;
 
@@ -62,29 +62,12 @@ module.exports = {
       return camera;
     };
 
-    var updateBall = function(currentPosition, priorPosition, ball) {
-      if (currentPosition === undefined) {
-        ball.position.set(
-          priorPosition.x,
-          priorPosition.y,
-          ball.position.z
-        );
-      } else {
-        ball.position.set(
-          currentPosition.x,
-          currentPosition.y,
-          ball.position.z
-        );
-      }
+    var updateBall = function(current, prior, ball) {
+      ball.position.set(current.x, current.y, ball.position.z );
     };
 
-    var updateColour = function (currentColour, priorColour, ball) {
-      if (currentColour === undefined) {
-        ball.material.color.setHex(priorColour);
-      } else {
-        ball.material.color.setHex(currentColour);
-      }
-
+    var updateColour = function (current, prior, ball) {
+      ball.material.color.setHex(current);
       mesh.material.needsUpdate = true;
     };
 
@@ -92,8 +75,8 @@ module.exports = {
       return state['bouncing-ball-game'].ball.position;
     };
 
-    var theBallColour = function (state) {
-      return state['bouncing-ball-game'].ball.colour;
+    var theBallDemeanour = function (state) {
+      return state['bouncing-ball-game'].ball.demeanour;
     };
 
     var mesh;
@@ -120,7 +103,7 @@ module.exports = {
       scene.add(ball);
 
       tracker().onChangeOf(theBallPosition, updateBall, ball);
-      tracker().onChangeOf(theBallColour, updateColour, ball);
+      tracker().onChangeOf(theBallDemeanour, updateColour, ball);
 
       define()('OnEachFrame', function () {
         return function () {

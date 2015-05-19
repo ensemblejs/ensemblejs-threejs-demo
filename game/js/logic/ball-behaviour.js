@@ -6,13 +6,13 @@ module.exports = {
   func: function (state) {
     return {
       changeColour: function () {
-        var current = state().get('bouncing-ball-game')('ball')('colour');
-        var newColour = (current === 0xffffff ? 0xff0000 : 0xffffff);
+        var current = state().get('bouncing-ball-game')('ball')('demeanour');
+        var newDemeanour = (current === 'happy' ? 'angry' : 'happy');
 
         return {
           'bouncing-ball-game': {
             ball: {
-              colour: newColour
+              demeanour: newDemeanour
             }
           }
         };
