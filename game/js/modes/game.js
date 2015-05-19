@@ -9,14 +9,8 @@ module.exports = {
         return {
           'bouncing-ball-game': {
             ball: {
-              position: {
-                x: 100,
-                y: 50
-              },
-              speed: {
-                x: 100,
-                y: 50
-              },
+              position: { x: 100, y: 50 },
+              speed: { x: 100, y: 50 },
               radius: 25,
               demeanour: 'happy'
             },
