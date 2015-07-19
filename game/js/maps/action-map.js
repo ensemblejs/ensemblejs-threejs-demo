@@ -5,7 +5,7 @@ module.exports = {
   deps: ['BouncingBallGame-Behaviour'],
   func: function(behaviour) {
     return {
-      'button1': [{target: behaviour().changeColour, onRelease: true}]
+      'primary': [{target: behaviour().changeColour, onRelease: true}]
     };
   }
 };

@@ -5,8 +5,8 @@ var THREE = require('ensemblejs-threejs');
 
 module.exports = {
   type: 'View',
-  deps: ['Element', 'StateTracker', 'DefinePlugin'],
-  func: function (element, tracker, define) {
+  deps: ['Element', 'StateTracker', 'DefinePlugin', 'CurrentState'],
+  func: function (element, tracker, define, currentState) {
     var camera;
     var renderer;
 
@@ -60,7 +60,7 @@ module.exports = {
     var createCircle = function () {
       var material = new THREE.MeshBasicMaterial();
 
-      var geometry = new THREE.CircleGeometry(tracker().get(theBallRadius), 100);
+      var geometry = new THREE.CircleGeometry(currentState().get(theBallRadius), 100);
       var mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(0,0,-100);
 
@@ -70,7 +70,7 @@ module.exports = {
       var material = new THREE.MeshBasicMaterial();
       material.color.setHex(0x55ff55);
 
-      var geometry = new THREE.PlaneBufferGeometry(tracker().get(theBoardDimensions).width, tracker().get(theBoardDimensions).height);
+      var geometry = new THREE.PlaneBufferGeometry(currentState().get(theBoardDimensions).width, currentState().get(theBoardDimensions).height);
       var mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(0,0,-101);
 

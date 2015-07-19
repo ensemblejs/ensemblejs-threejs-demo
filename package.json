@@ -7,8 +7,8 @@
     "npm": "latest"
   },
   "dependencies": {
-    "ensemblejs": "^4.1.0",
-    "ensemblejs-client": "^1.4.2",
+    "ensemblejs": "^4.2.0",
+    "ensemblejs-client": "^2.0.0",
     "ensemblejs-threejs": "^0.71.0",
     "zepto-browserify": "^1.1.6-1"
   },
@@ -31,8 +31,8 @@
     "vinyl-transform": "^1.0.0"
   },
   "scripts": {
-    "test": "gulp test",
-    "start": "gulp && node game.js | bunyan -o short -l info"
+    "start": "gulp && node game.js | bunyan -o short -l info",
+    "test": "gulp test"
   },
   "browserify": {
     "transform": [
