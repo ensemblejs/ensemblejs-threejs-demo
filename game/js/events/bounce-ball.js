@@ -1,9 +1,9 @@
 'use strict';
 
 module.exports = {
-  type: 'ServerSideUpdate',
-  func: function() {
-    return function(state, delta) {
+  type: 'OnPhysicsFrame',
+  func: function OnPhysicsFrame () {
+    return function bounceBall (state, delta) {
       var pos = state.for('bouncing-ball-game').get('ball')('position');
       var radius = state.for('bouncing-ball-game').get('ball')('radius');
       var speed = state.for('bouncing-ball-game').get('ball')('speed');
