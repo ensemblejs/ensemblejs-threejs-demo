@@ -33,7 +33,7 @@ function theBoardDimensions (state) {
 }
 
 module.exports = {
-  type: 'OnReady',
+  type: 'OnClientReady',
   deps: ['Config', 'StateTracker', 'DefinePlugin', 'CurrentState', '$'],
   func: function OnReady (config, tracker, define, currentState, $) {
     var camera;

@@ -7,7 +7,7 @@
     "npm": "latest"
   },
   "dependencies": {
-    "ensemblejs": "^5.0.0-beta-rc2",
+    "ensemblejs": "^5.0.0",
     "ensemblejs-threejs": "^0.71.0"
   },
   "devDependencies": {
